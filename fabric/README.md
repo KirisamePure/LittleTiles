@@ -9,6 +9,16 @@ Saving and reloading content created with the new mod remains required.
 
 ## Build
 
+When opening `fabric/` directly in IntelliJ IDEA, select **Gradle distribution:
+Wrapper** and **Gradle JVM: JDK 25** in Settings → Build Tools → Gradle, then
+reload the Gradle project. This directory includes its own Gradle 9.7.1 wrapper;
+Loom 1.18.4 requires Gradle 9.7 or newer. A locally selected Gradle 9.6 cannot
+resolve the plugin even when Java 25 is configured correctly.
+
+From this directory, `./gradlew runClient` launches the Fabric development game;
+`./gradlew build` produces the Fabric JAR under `build/libs/`. On Windows use
+`gradlew.bat`. The parent project's `runClient` launches legacy Forge 1.7.10.
+
 Use a **JDK 25** for Gradle/Loom (the mod targets Java 21 bytecode) and the
 existing Gradle wrapper from **this directory**:
 

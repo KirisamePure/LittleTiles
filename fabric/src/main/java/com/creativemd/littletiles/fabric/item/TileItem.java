@@ -43,17 +43,8 @@ public final class TileItem extends Item {
     }
     private static boolean execute(UseOnContext context, ServerPlayer player, List<Tile> source,boolean blueprint) {
         var mode=ToolSettings.read(context.getItemInHand()).placeMode();
-        boolean inward=mode==ToolSettings.PlaceMode.OVERWRITE||mode==ToolSettings.PlaceMode.STENCIL;
-        BlockPos clicked = context.getClickedPos();
-        BlockPos target = inward||context.getLevel().getBlockEntity(clicked) instanceof LittleBlockEntity
-                ? clicked : clicked.relative(context.getClickedFace());
-        Direction face=inward?context.getClickedFace().getOpposite():context.getClickedFace();
-        List<Tile> shifted = align(source, context.getClickLocation().subtract(Vec3.atLowerCornerOf(target)),
-                face);
-        if (!inward && (shifted.isEmpty() || !Tiles.valid(shifted))) {
-            target = clicked.relative(context.getClickedFace());
-            shifted = align(source, context.getClickLocation().subtract(Vec3.atLowerCornerOf(target)),face);
-        }
+        var located=locate(context.getLevel(),context.getClickedPos(),context.getClickLocation(),context.getClickedFace(),source,mode);
+        BlockPos target=located.pos();List<Tile> shifted=located.tiles();
         if (shifted.isEmpty() || !Tiles.valid(shifted) || !EditHistory.allowed(player, target)
                 || !player.mayUseItemAt(target, context.getClickedFace(), context.getItemInHand())) return false;
         var existing=CuttingTool.source(player,target);
@@ -75,6 +66,20 @@ public final class TileItem extends Item {
             CuttingTool.give(player,plan.removed());
         }
         return true;
+    }
+
+    public record Target(BlockPos pos,List<Tile> tiles) { public Target {pos=pos.immutable();tiles=List.copyOf(tiles);} }
+    /** Shared by server placement and the client ghost; no inventory/world mutation. */
+    public static Target locate(net.minecraft.world.level.Level level,BlockPos clicked,Vec3 hit,Direction clickedFace,
+                                List<Tile> source,ToolSettings.PlaceMode mode) {
+        boolean inward=mode==ToolSettings.PlaceMode.OVERWRITE||mode==ToolSettings.PlaceMode.STENCIL;
+        BlockPos target=inward||level.getBlockEntity(clicked) instanceof LittleBlockEntity?clicked:clicked.relative(clickedFace);
+        Direction face=inward?clickedFace.getOpposite():clickedFace;
+        var shifted=align(source,hit.subtract(Vec3.atLowerCornerOf(target)),face);
+        if(!inward && (shifted.isEmpty() || !Tiles.valid(shifted))) {
+            target=clicked.relative(clickedFace);shifted=align(source,hit.subtract(Vec3.atLowerCornerOf(target)),face);
+        }
+        return new Target(target,shifted);
     }
 
     private static List<Tile> align(List<Tile> source, Vec3 hit, Direction face) {

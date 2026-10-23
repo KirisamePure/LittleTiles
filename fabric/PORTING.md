@@ -35,7 +35,7 @@ with the new mod remains required.
 - Server integration tests and a real client smoke test are included. The
   client test verified world/item tile data and portable menu synchronization;
   generated screenshots were inspected for the stone/glass sample and bag UI.
-  Latest local validation passed: 22 custom server tests (23 including the
+  Latest local validation passed: 25 custom server tests (26 including the
   runner's own test), the 108,463-check geometry suite, remapped build, and the
   client smoke test including live tint updates and a real C2S preview rotation
   request followed by inventory synchronization. Xvfb logged a missing standard
@@ -104,3 +104,23 @@ feature parity or publish this as the completed port.
   per-microtile light propagation and terrain-style ambient occlusion remain open.
 - Production modpacks, Sodium, named tooltip integrations and two real clients
   remain untested. Keep the artifact marked as a development build.
+
+## Hammer and placement preview follow-up
+
+- Added hammer workbench with live inventory material selection, XYZ grid view,
+  batch quantity, explicit block cost and exact fractional refund. Server packets
+  carry slot references and bounded dimensions/count, never arbitrary material
+  or tile data. Stale material, special item data, insufficient stock and
+  block-entity source blocks are rejected. Sneak-use harvests whole groups.
+- Replaced repeated pairwise compaction with sorted axis groups; render-only
+  compaction merges boundary-only model cuboids while leaving detailed models
+  and editable source data intact. The dense 512-cube case now emits six quads.
+  Geometry-cache keys also include model identity to avoid reusing baked geometry
+  after a block-model reload.
+- Added green/red/amber translucent placement-volume previews for tile items and
+  single/multi-block blueprint pastes. Shared location math prevents drift from
+  server placement. Textured ghosts and client prediction of payment/protection
+  remain outstanding.
+- Added three server regressions for batch volume conservation, malformed/stale
+  hammer requests and compaction identity/holes. Client checks cover the hammer
+  screen and real manufacturing packet, preview alignment and blocked overlap.

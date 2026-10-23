@@ -97,6 +97,54 @@ public final class TileClientTest implements FabricClientGameTest {
             context.takeScreenshot("littletiles-tool-settings");
             context.clickScreenButton("gui.done");
             context.waitFor(client -> ToolSettings.read(client.player.getMainHandItem()).equals(desired));
+            world.getServer().runOnServer(server -> {
+                var player=server.getPlayerList().getPlayers().getFirst();
+                player.getInventory().setItem(0,new ItemStack(LittleTilesContent.HAMMER));
+                player.getInventory().setItem(9,new ItemStack(Items.STONE,2));
+                player.inventoryMenu.broadcastFullState();
+            });
+            context.waitFor(client -> client.player.getMainHandItem().is(LittleTilesContent.HAMMER)
+                    && client.player.getInventory().getItem(9).is(Items.STONE));
+            context.runOnClient(client -> client.setScreen(new com.creativemd.littletiles.fabric.client.HammerScreen(client.player.getMainHandItem())));
+            context.waitForScreen(com.creativemd.littletiles.fabric.client.HammerScreen.class);
+            context.takeScreenshot("littletiles-hammer");
+            context.clickScreenButton("hammer.littletiles.craft");
+            context.waitFor(client -> {
+                for(int i=0;i<36;i++) if(client.player.getInventory().getItem(i).is(LittleTilesContent.TILES)
+                        && Tiles.read(client.player.getInventory().getItem(i)).map(t -> t.size()==1 && t.getFirst().box().volume()==1).orElse(false)) return true;
+                return false;
+            });
+            context.clickScreenButton("gui.done");
+            // Hit location is fed to both client preview and the real server placement routine.
+            final var stamp=List.of(new Tile(Blocks.STONE.defaultBlockState(),new MicroBox(0,0,0,4,4,4),0xFFFFFF,true));
+            world.getServer().runOnServer(server -> {
+                var player=server.getPlayerList().getPlayers().getFirst();
+                var stack=new ItemStack(LittleTilesContent.TILES);Tiles.write(stack,stamp);
+                player.getInventory().setItem(0,stack);player.inventoryMenu.broadcastFullState();
+            });
+            context.waitFor(client -> Tiles.read(client.player.getMainHandItem()).map(t -> t.equals(stamp)).orElse(false));
+            context.runOnClient(client -> {
+                var hit=new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atLowerCornerOf(POS).add(0.25,1,0.25),
+                        net.minecraft.core.Direction.UP,POS,false);
+                client.hitResult=hit;
+                var preview=com.creativemd.littletiles.fabric.client.PlacementPreview.extract(client);
+                var located=com.creativemd.littletiles.fabric.item.TileItem.locate(client.level,POS,hit.getLocation(),hit.getDirection(),stamp,ToolSettings.PlaceMode.NORMAL);
+                if(!preview.valid() || preview.boxes().size()!=1 || located.tiles().isEmpty()) throw new AssertionError("Valid placement preview must match located geometry");
+                var box=located.tiles().getFirst().box();var expected=new net.minecraft.world.phys.AABB(
+                    located.pos().getX()+box.minX()/16.0,located.pos().getY()+box.minY()/16.0,located.pos().getZ()+box.minZ()/16.0,
+                    located.pos().getX()+box.maxX()/16.0,located.pos().getY()+box.maxY()/16.0,located.pos().getZ()+box.maxZ()/16.0);
+                if(!preview.boxes().getFirst().equals(expected)) throw new AssertionError("Ghost and server alignment differ");
+                var existing=((LittleBlockEntity)client.level.getBlockEntity(POS)).tiles();
+                client.hitResult=new net.minecraft.world.phys.BlockHitResult(net.minecraft.world.phys.Vec3.atLowerCornerOf(POS).add(0.5,0.25,0.25),
+                        net.minecraft.core.Direction.EAST,POS,false);
+                var blocked=com.creativemd.littletiles.fabric.client.PlacementPreview.extract(client);
+                if(blocked.valid() || blocked.boxes().isEmpty()) throw new AssertionError("Overlapping placement must show a blocked ghost");
+                if(!existing.equals(((LittleBlockEntity)client.level.getBlockEntity(POS)).tiles())) throw new AssertionError("Preview must never edit the world");
+                client.hitResult=hit;
+            });
+            context.waitTicks(5);
+            context.takeScreenshot("littletiles-placement-preview");
+
         }
     }
 }

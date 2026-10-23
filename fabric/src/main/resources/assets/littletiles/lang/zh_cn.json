@@ -16,7 +16,7 @@
   "key.category.littletiles.tools": "微方块工具",
   "key.littletiles.rotate": "旋转预览",
   "key.littletiles.mirror": "镜像预览",
-  "tooltip.littletiles.hammer": "右键将完整方块转为微方块；再次点击提取选中的微方块。",
+  "tooltip.littletiles.hammer": "G / 对空气右键：切割台。潜行使用：回收整组。",
   "tooltip.littletiles.saw": "分割普通方块或微方块。G：切深与切割模式。",
   "tooltip.littletiles.wrench": "右键旋转整组微方块；潜行右键进行镜像。",
   "tooltip.littletiles.chisel": "可直接切割普通完整方块。G：网格、尺寸与切割模式。",
@@ -45,5 +45,14 @@
   "littletiles.selection.first": "已标记第一个角，请选择另一个角。",
   "tooltip.littletiles.material": "材质：%s（%s）",
   "tooltip.littletiles.volume": "材料体积：%s／4096 方块",
-  "tooltip.littletiles.configure": "G：放置模式；R／F：旋转／镜像"
+  "tooltip.littletiles.configure": "G：放置模式；R／F：旋转／镜像",
+  "hammer.littletiles.title": "小锤子 — 方块切割台",
+  "hammer.littletiles.count": "数量",
+  "hammer.littletiles.craft": "开始加工",
+  "hammer.littletiles.no_material": "请在背包中放入普通方块",
+  "hammer.littletiles.material": "材料：%s × %s（点击切换）",
+  "hammer.littletiles.cost": "消耗：%s 个方块",
+  "hammer.littletiles.hint": "XYZ 单位为 1/16 格；G / 对空气右键打开",
+  "hammer.littletiles.failed": "加工失败：请检查材料和数量。",
+  "hammer.littletiles.refund": "返还：%s / 4096"
 }

@@ -80,7 +80,13 @@ See [PORTING.md](PORTING.md) for the remaining features and acceptance checks.
 
 ## Implemented gameplay subset
 
-- Hammer: convert a supported full cube into micro-tiles; extract a selected cuboid.
+- Hammer: **G** or right-click air opens the cutting workbench. Select an ordinary
+  block stack directly from your inventory, set XYZ (1–16 sixteenths) and batch
+  quantity (1–64), then Hammer it. The server validates the real input, consumes
+  whole blocks and refunds every unused micro-volume. No items are held in a
+  temporary GUI slot. A front-view grid previews the chosen dimensions.
+  Use on a supported world cube to convert it; use on microtiles to extract a
+  cuboid; sneak-use harvests the entire group.
 - Chisel/saw: configurable voxel, sized box, slice, two-corner region, whole-cuboid
   extraction and split modes. Hold the tool and press **G** to set grid and dimensions.
 - Tile/blueprint placement: normal, fill empty space, overwrite, or reusable stencil
@@ -109,7 +115,10 @@ The renderer uses Fabric model emission and original textures, render layers,
 vertex attributes and contextual tint providers. Textures are cropped rather than
 stretched. Cached meshes remove internal/neighbor-covered surfaces and submit
 geometry by render layer. The dense 512-cube test reduces 3,072 faces to 384 and
-uses one geometry submission for its single layer. This is a geometry test,
+uses one geometry submission for its single layer. Render-only compaction now
+reduces those 384 remaining coplanar faces to six while preserving the 512
+separately editable cuboids. Detailed models with interior faces are excluded
+from this merge optimization. This is a geometry test,
 not an FPS benchmark. Custom dynamic models must obey Fabric geometry-key rules.
 
 A separate test mod exercises an emission-only, world-dependent tinted model.
@@ -118,8 +127,8 @@ tested; generic API support is not a guarantee for every mod block.
 
 Current limits: 512 tiles per edit, 32 blocks per selection axis and 512 blocks
 per selection region. Functional structures and additional color settings are
-deferred at the user's request. Complex/deformed shape tools, full placement
-preview overlays and remaining original tool modes are still outstanding; this
+deferred at the user's request. Complex/deformed shape tools, textured placement
+ghosts, additional selection overlays and remaining original tool modes are still outstanding; this
 is not the complete original toolset. Old worlds/blueprints are not imported.
 
 ## Integration checks
@@ -146,9 +155,27 @@ data, captures world/item screenshots, and checks portable inventory menu data.
 Screenshots alone do not establish visual feature parity; inspect them for
 missing textures, incorrect geometry, tint and transparency.
 
-Latest validation passed 22 custom server tests (23 including the runner),
+Latest validation passed 25 custom server tests (26 including the runner),
 108,463 geometry checks, 256,000 randomized surface checks plus adjacency/UV
 checks, and the real client test. Client checks cover clipping, transparent
 interfaces, model/tint cache invalidation, inventory/menu synchronization and
 the actual settings packet round trip. Screenshots are generated under
 `build/run/clientGameTest/screenshots/`.
+
+## Placement preview
+
+Held tile items show a depth-tested translucent volume and wire outline at the
+predicted placement location. Sneak while holding a blueprint to preview its
+paste, including multiple blocks. Green means geometry fits; red indicates a
+collision/overlap or unsupported target; amber marks stencil removal. R/F
+transforms update after the server synchronizes the held item. The preview and
+single-block placement share the same locator, including neighboring-block
+fallback and inward overwrite/stencil alignment. Fill/stencil show affected
+volume. Preview extraction never mutates world or inventory; drawing uses only
+immutable snapshots.
+
+The preview predicts geometry locally. The server still checks survival payment,
+reach, protection and permissions; a green ghost is not a guarantee that those
+server checks will succeed. The current overlay shows volume rather than a
+textured material ghost. Additional color settings and functional structures
+remain deferred.

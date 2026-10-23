@@ -52,7 +52,7 @@ public final class MaterialMeshBuilder {
         public Mesh { batches = List.copyOf(batches); }
     }
     private record RawQuad(List<Vertex> vertices, RenderType layer, Direction face, boolean boundary, int tint, boolean shade) {}
-    private record GeometryKey(BlockState material, Object key) {}
+    private record GeometryKey(Object model, BlockState material, Object key) {}
     public record Occluder(BlockState material, MicroBox box, int color) {}
     public static final class Prepared {
         private final Object key;
@@ -75,7 +75,7 @@ public final class MaterialMeshBuilder {
         var view = new MaterialView(world, pos, material);
         long seed = material.getSeed(pos);
         Object key = fabric.createGeometryKey(view, pos, material, RandomSource.create(seed));
-        GeometryKey cacheKey = key == null ? null : new GeometryKey(material, key);
+        GeometryKey cacheKey = key == null ? null : new GeometryKey(model, material, key);
         List<RawQuad> quads = cacheKey == null ? null : geometryCache.get(cacheKey);
         if (quads == null) {
             var captured = new ArrayList<RawQuad>();
@@ -118,12 +118,20 @@ public final class MaterialMeshBuilder {
 
     public Mesh build(List<Tile> tiles, Map<BlockState, Prepared> prepared, List<Occluder> neighbors,
                        BlockAndTintGetter world, boolean item) {
+        // Adjacent equal cuboids share continuous block-space UVs. Compact the
+        // render copy only; selectable split pieces and serialized edits stay intact.
+        int originalSources = tiles.stream().mapToInt(t -> prepared.get(t.material()).quads.size()).sum();
+        var mergeable = new ArrayList<Tile>();var detailed = new ArrayList<Tile>();
+        for (Tile tile : tiles) {
+            if (prepared.get(tile.material()).quads.stream().allMatch(RawQuad::boundary)) mergeable.add(tile);
+            else detailed.add(tile);
+        }
+        detailed.addAll(com.creativemd.littletiles.fabric.tile.Tiles.compact(mergeable));
+        tiles = detailed;
         Map<RenderType, List<DrawQuad>> batches = new LinkedHashMap<>();
-        int source = 0;
         for (Tile tile : tiles) {
             Prepared input = prepared.get(tile.material());
             List<RawQuad> quads = input.quads;
-            source += quads.size();
             Map<Direction, List<FaceVisibility.Rect>> visible = new java.util.EnumMap<>(Direction.class);
             for (Direction face : Direction.values()) {
                 var occluders = new ArrayList<MicroBox>();
@@ -147,7 +155,7 @@ public final class MaterialMeshBuilder {
             }
         }
         List<Batch> result = batches.entrySet().stream().map(e -> new Batch(e.getKey(), e.getValue())).toList();
-        return new Mesh(result, source, result.stream().mapToInt(b -> b.quads.size()).sum());
+        return new Mesh(result, originalSources, result.stream().mapToInt(b -> b.quads.size()).sum());
     }
     private static boolean occludes(Tile source, BlockState other, int otherColor, Direction face) {
         return other.canOcclude() || (source.color() == otherColor && source.material().skipRendering(other, face));

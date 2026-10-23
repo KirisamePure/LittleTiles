@@ -25,7 +25,7 @@ public record ToolSettings(int grid, int width, int height, int depth, CutMode c
     public boolean valid() { return grid>=1 && grid<=16 && width>=1 && width<=16 && height>=1 && height<=16
             && depth>=1 && depth<=16 && cutMode!=null && placeMode!=null; }
     public static boolean configurable(ItemStack stack) {
-        return stack.is(LittleTilesContent.CHISEL) || stack.is(LittleTilesContent.SAW)
+        return stack.is(LittleTilesContent.HAMMER) || stack.is(LittleTilesContent.CHISEL) || stack.is(LittleTilesContent.SAW)
                 || stack.is(LittleTilesContent.BLUEPRINT) || stack.is(LittleTilesContent.TILES);
     }
     public static ToolSettings read(ItemStack stack) {

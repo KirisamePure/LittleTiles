@@ -420,4 +420,52 @@ public final class TileGameTests {
         }
         return volume;
     }
+
+    @GameTest public void hammerManufacturingConservesRemainder(GameTestHelper h) {
+        var player=player(h,false);player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(LittleTilesContent.HAMMER));
+        player.getInventory().setItem(9,new ItemStack(Items.STONE,2));
+        var packet=new com.creativemd.littletiles.fabric.edit.HammerPayload(9,
+                net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(Items.STONE),3,5,7,17);
+        check(h,packet.apply(player),"Hammer must manufacture from real inventory blocks");
+        long volume=0;int produced=0;
+        for(int slot=0;slot<player.getInventory().getContainerSize();slot++) {
+            var stack=player.getInventory().getItem(slot);
+            if(stack.is(Items.STONE)) volume+=4096L*stack.getCount();
+            if(stack.is(LittleTilesContent.TILES)) {
+                var tiles=Tiles.read(stack).orElseThrow();volume+=tiles.stream().mapToLong(t -> t.box().volume()).sum()*stack.getCount();
+                if(tiles.size()==1 && tiles.getFirst().box().equals(new MicroBox(0,0,0,3,5,7))) produced+=stack.getCount();
+            }
+        }
+        check(h,volume==8192 && produced==17,"Manufactured pieces plus exact refunds must conserve all input volume");
+        check(h,ToolSettings.read(player.getMainHandItem()).width()==3,"Hammer remembers successful dimensions");h.succeed();
+    }
+    @GameTest public void hammerRejectsForgedAndStaleRequests(GameTestHelper h) {
+        var player=player(h,false);player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(LittleTilesContent.HAMMER));
+        player.getInventory().setItem(9,new ItemStack(Items.STONE));
+        var stone=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(Items.STONE);
+        var dirt=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(Items.DIRT);
+        for(var request:List.of(
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(9,dirt,1,1,1,1),
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(9,stone,0,1,1,1),
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(9,stone,16,16,16,2),
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(9,stone,1,1,1,65),
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(39,stone,1,1,1,1)))
+            check(h,!request.apply(player),"Reject invalid dimensions/count/slot, insufficient stock and stale material");
+        check(h,player.getInventory().getItem(9).getCount()==1,"Rejected requests must not consume input");
+        player.getInventory().setItem(9,new ItemStack(Items.CHEST));
+        check(h,!new com.creativemd.littletiles.fabric.edit.HammerPayload(9,
+                net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(Items.CHEST),1,1,1,1).apply(player),"Never cut block-entity inventory materials");
+        h.succeed();
+    }
+    @GameTest public void fastCompactionPreservesHolesAndIdentity(GameTestHelper h) {
+        var stone=Blocks.STONE.defaultBlockState();var list=new java.util.ArrayList<Tile>();
+        for(int x=0;x<16;x+=2) for(int y=0;y<16;y+=2) for(int z=0;z<16;z+=2)
+            list.add(new Tile(stone,new MicroBox(x,y,z,x+2,y+2,z+2),0xFFFFFF,true));
+        check(h,Tiles.compact(list).size()==1,"512 adjacent equal cubes compact to one without altering original");
+        check(h,list.size()==512,"Compaction must not mutate editable pieces");
+        list.removeFirst();list.set(0,list.getFirst().withColor(0xFF0000));
+        var compacted=Tiles.compact(list);
+        check(h,compacted.stream().mapToLong(t -> t.box().volume()).sum()==4088 && Tiles.valid(compacted),"Hole and volume must survive compaction");
+        check(h,compacted.stream().filter(t -> t.color()==0xFF0000).mapToLong(t -> t.box().volume()).sum()==8,"Color boundaries must survive");h.succeed();
+    }
 }

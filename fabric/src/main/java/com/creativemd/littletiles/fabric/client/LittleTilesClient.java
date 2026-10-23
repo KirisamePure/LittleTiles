@@ -18,6 +18,15 @@ public final class LittleTilesClient implements ClientModInitializer {
     @Override public void onInitializeClient() {
         BlockEntityRenderers.register(LittleTilesContent.TILE_ENTITY, LittleTilesRenderer::new);
         SpecialModelRenderers.ID_MAPPER.put(LittleTilesContent.id("tiles"), TileItemRenderer.Unbaked.CODEC);
+        PlacementPreview.initialize();
+        net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player,level,hand) -> {
+            if(level.isClientSide() && hand==net.minecraft.world.InteractionHand.MAIN_HAND
+                    && player.getMainHandItem().is(LittleTilesContent.HAMMER) && !player.isShiftKeyDown()) {
+                net.minecraft.client.Minecraft.getInstance().setScreen(new HammerScreen(player.getMainHandItem()));
+                return net.minecraft.world.InteractionResult.SUCCESS;
+            }
+            return net.minecraft.world.InteractionResult.PASS;
+        });
         var category = KeyMapping.Category.register(LittleTilesContent.id("tools"));
         var rotate = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.littletiles.rotate", InputConstants.Type.KEYSYM,
                 GLFW.GLFW_KEY_R, category));
@@ -30,7 +39,8 @@ public final class LittleTilesClient implements ClientModInitializer {
             while (mirror.consumeClick()) send(client, true);
             while (configure.consumeClick()) if(client.player!=null && client.screen==null
                     && ToolSettings.configurable(client.player.getMainHandItem()))
-                client.setScreen(new ToolSettingsScreen(client.player.getMainHandItem()));
+                client.setScreen(client.player.getMainHandItem().is(LittleTilesContent.HAMMER)
+                        ? new HammerScreen(client.player.getMainHandItem()) : new ToolSettingsScreen(client.player.getMainHandItem()));
         });
     }
 

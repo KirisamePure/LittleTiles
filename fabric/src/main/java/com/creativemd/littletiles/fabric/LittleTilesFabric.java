@@ -22,6 +22,7 @@ public final class LittleTilesFabric implements ModInitializer {
         LittleTilesContent.initialize();
         PreviewAction.initialize();
         SettingsPayload.initialize();
+        com.creativemd.littletiles.fabric.edit.HammerPayload.initialize();
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> EditHistory.clear());
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> EditHistory.clear(handler.player.getUUID()));
         CommandRegistrationCallback.EVENT.register((dispatcher, registries, environment) -> dispatcher.register(

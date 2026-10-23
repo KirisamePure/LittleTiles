@@ -66,7 +66,10 @@ public final class LittleToolItem extends Item {
         var drops = new ArrayList<Tile>();
         boolean dyeConsumed = false;
         switch (tool) {
-            case HAMMER -> { replacement.remove(selected); drops.add(selected); }
+            case HAMMER -> {
+                if (context.isSecondaryUseActive()) { replacement.clear(); drops.addAll(be.tiles()); }
+                else { replacement.remove(selected); drops.add(selected); }
+            }
             case WRENCH -> { replacement.clear(); replacement.addAll(Tiles.transform(be.tiles(), axis, context.isSecondaryUseActive())); }
             case MALLET -> { replacement.clear(); replacement.addAll(Tiles.compact(be.tiles())); }
             case COLLISION -> { replacement.remove(selected); replacement.add(selected.withCollision(!selected.collision())); }

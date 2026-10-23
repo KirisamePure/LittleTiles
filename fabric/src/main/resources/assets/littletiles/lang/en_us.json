@@ -16,7 +16,7 @@
   "key.category.littletiles.tools": "LittleTiles tools",
   "key.littletiles.rotate": "Rotate preview",
   "key.littletiles.mirror": "Mirror preview",
-  "tooltip.littletiles.hammer": "Right-click a full block to convert it; click a tile to extract it.",
+  "tooltip.littletiles.hammer": "G / right-click air: cutting workbench. Sneak-use: harvest whole group.",
   "tooltip.littletiles.saw": "Split ordinary blocks or micro-tiles. G: cut depth and mode.",
   "tooltip.littletiles.wrench": "Right-click to rotate; sneak-right-click to mirror the tile group.",
   "tooltip.littletiles.chisel": "Cut ordinary full blocks directly. G: grid, size and cut mode.",
@@ -45,5 +45,14 @@
   "littletiles.selection.first": "First corner marked. Select the other corner.",
   "tooltip.littletiles.material": "Material: %s (%s)",
   "tooltip.littletiles.volume": "Material volume: %s / 4096 blocks",
-  "tooltip.littletiles.configure": "G: placement mode; R/F: rotate/mirror"
+  "tooltip.littletiles.configure": "G: placement mode; R/F: rotate/mirror",
+  "hammer.littletiles.title": "Little Hammer — cut blocks into pieces",
+  "hammer.littletiles.count": "Pieces",
+  "hammer.littletiles.craft": "Hammer it",
+  "hammer.littletiles.no_material": "Put ordinary blocks in your inventory",
+  "hammer.littletiles.material": "Material: %s × %s (click to switch)",
+  "hammer.littletiles.cost": "Cost: %s blocks",
+  "hammer.littletiles.hint": "XYZ: sixteenths · G / right-click air to open",
+  "hammer.littletiles.failed": "Cannot craft: check material and quantity.",
+  "hammer.littletiles.refund": "Refund: %s / 4096"
 }

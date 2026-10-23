@@ -95,6 +95,11 @@ public final class MaterialPayment {
         player.getInventory().setChanged();
     }
 
+    public static List<ItemStack> refund(Block block, int volume) {
+        if (volume<0 || volume>4096) throw new IllegalArgumentException("Refund volume");
+        return stacks(new Material(block,0xFFFFFF),volume);
+    }
+
     private static List<ItemStack> stacks(Material material, long volume) {
         List<ItemStack> result = new ArrayList<>();
         long full = volume / 4096;

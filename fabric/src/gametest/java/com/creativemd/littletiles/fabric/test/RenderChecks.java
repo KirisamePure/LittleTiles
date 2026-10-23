@@ -24,16 +24,16 @@ public final class RenderChecks {
             var slabs=new ArrayList<Tile>();
             for(int x=0;x<16;x+=2) slabs.add(new Tile(stone,new MicroBox(x,0,0,x+2,16,16),0xFFFFFF,true));
             var mesh=builder.build(slabs,prepared,List.of(),client.level,false);
-            check(mesh.sourceQuads()==48 && mesh.outputQuads()==34,"Eight slabs: cull 14 internal faces (48 -> 34)");
+            check(mesh.sourceQuads()==48 && mesh.outputQuads()==6,"Eight slabs: merge equal surfaces (48 -> 6)");
             check(mesh.batches().size()==1,"Same render layer should be submitted in one batch, not eight");
             var dense=new ArrayList<Tile>();
             for(int x=0;x<16;x+=2) for(int y=0;y<16;y+=2) for(int z=0;z<16;z+=2)
                 dense.add(new Tile(stone,new MicroBox(x,y,z,x+2,y+2,z+2),0xFFFFFF,true));
             var denseMesh=builder.build(dense,prepared,List.of(),client.level,false);
-            check(denseMesh.sourceQuads()==3072 && denseMesh.outputQuads()==384 && denseMesh.batches().size()==1,
-                    "512 microtiles: cull interior faces (3072 -> 384) and batch one render layer");
+            check(denseMesh.sourceQuads()==3072 && denseMesh.outputQuads()==6 && denseMesh.batches().size()==1,
+                    "512 microtiles: cull interior faces (3072 -> 6) and batch one render layer");
             var neighbor=new MaterialMeshBuilder.Occluder(stone,new MicroBox(16,0,0,32,16,16),0xFFFFFF);
-            check(builder.build(slabs,prepared,List.of(neighbor),client.level,false).outputQuads()==33,
+            check(builder.build(slabs,prepared,List.of(neighbor),client.level,false).outputQuads()==5,
                     "Neighboring full block must hide the shared boundary face");
             var cube=new Tile(stone,new MicroBox(0,0,0,16,16,16),0xFFFFFF,true);
             var full=builder.build(List.of(cube),prepared,List.of(),client.level,false);
@@ -44,7 +44,7 @@ public final class RenderChecks {
             var glassPrepared=Map.of(glass,builder.prepare(glass,client.level,pos,false));
             var left=new Tile(glass,new MicroBox(0,0,0,8,16,16),0xFFFFFF,true);
             var right=left.withBox(new MicroBox(8,0,0,16,16,16));
-            check(builder.build(List.of(left,right),glassPrepared,List.of(),client.level,false).outputQuads()==10,
+            check(builder.build(List.of(left,right),glassPrepared,List.of(),client.level,false).outputQuads()==6,
                     "Same transparent material should hide its internal interface");
             check(builder.build(List.of(left,right.withColor(0xFF0000)),glassPrepared,List.of(),client.level,false).outputQuads()==12,
                     "Different transparent tints must keep their interface");
@@ -86,7 +86,7 @@ public final class RenderChecks {
             ((LittleBlockEntity)server.overworld().getBlockEntity(pos)).replace(original);
         });
         context.waitFor(client -> client.level.getBlockEntity(pos) instanceof LittleBlockEntity be && be.tiles().equals(original));
-        System.out.println("Render checks passed: 512 microtiles 3072 -> 384 quads, 512 -> 1 layer submissions; cross-block culling, cropped UVs, transparent interfaces, FRAPI emission-only model, contextual tint and cache invalidation.");
+        System.out.println("Render checks passed: 512 microtiles 3072 -> 6 quads, 512 -> 1 layer submissions; cross-block culling, cropped UVs, transparent interfaces, FRAPI emission-only model, contextual tint and cache invalidation.");
     }
     private static double uvArea(MaterialMeshBuilder.Mesh mesh) {
         var vertices=mesh.batches().stream().flatMap(b -> b.quads().stream()).flatMap(q -> q.vertices().stream())

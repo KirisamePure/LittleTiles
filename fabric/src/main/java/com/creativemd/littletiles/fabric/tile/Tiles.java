@@ -65,22 +65,37 @@ public final class Tiles {
     /** Merge only matching materials, color and collision; never fill gaps. */
     public static List<Tile> compact(List<Tile> tiles) {
         var result = new ArrayList<>(tiles);
-        boolean changed;
+        int previous;
         do {
-            changed = false;
-            outer: for (int i = 0; i < result.size(); i++) {
-                for (int j = i + 1; j < result.size(); j++) {
-                    Tile a = result.get(i), b = result.get(j);
-                    if (!a.material().equals(b.material()) || a.color() != b.color()
-                            || a.collision() != b.collision()) continue;
-                    var merged = a.box().merge(b.box());
-                    if (merged.isPresent()) {
-                        result.set(i, a.withBox(merged.get())); result.remove(j);
-                        changed = true; break outer;
+            previous=result.size();
+            for (int axis=0;axis<3;axis++) {
+                final int selectedAxis=axis;
+                var groups=new java.util.LinkedHashMap<List<Object>,List<Tile>>();
+                for(Tile tile:result) {
+                    var b=tile.box();
+                    List<Object> key=switch(axis) {
+                        case 0 -> List.of(tile.material(),tile.color(),tile.collision(),b.minY(),b.maxY(),b.minZ(),b.maxZ());
+                        case 1 -> List.of(tile.material(),tile.color(),tile.collision(),b.minX(),b.maxX(),b.minZ(),b.maxZ());
+                        default -> List.of(tile.material(),tile.color(),tile.collision(),b.minX(),b.maxX(),b.minY(),b.maxY());
+                    };
+                    groups.computeIfAbsent(key,k -> new ArrayList<>()).add(tile);
+                }
+                result=new ArrayList<>();
+                for(var group:groups.values()) {
+                    group.sort(java.util.Comparator.comparingInt(t -> switch(selectedAxis) {
+                        case 0 -> t.box().minX();case 1 -> t.box().minY();default -> t.box().minZ();
+                    }));
+                    Tile current=null;
+                    for(Tile next:group) {
+                        if(current==null) {current=next;continue;}
+                        var merged=current.box().merge(next.box());
+                        if(merged.isPresent()) current=current.withBox(merged.get());
+                        else {result.add(current);current=next;}
                     }
+                    if(current!=null) result.add(current);
                 }
             }
-        } while (changed);
+        } while(result.size()<previous);
         return List.copyOf(result);
     }
 }

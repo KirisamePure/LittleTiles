@@ -54,5 +54,6 @@
   "hammer.littletiles.cost": "Cost: %s blocks",
   "hammer.littletiles.hint": "XYZ: sixteenths · G / right-click air to open",
   "hammer.littletiles.failed": "Cannot craft: check material and quantity.",
-  "hammer.littletiles.refund": "Refund: %s / 4096"
+  "hammer.littletiles.refund": "Refund: %s / 4096",
+  "hammer.littletiles.input": "Input"
 }

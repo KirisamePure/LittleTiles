@@ -44,6 +44,9 @@ public final class LittleTilesContent {
     public static final Item BAG = register("little_bag", p -> new BagItem(p.stacksTo(1)));
     public static final Item CONTAINER = register("container", p -> new BagItem(p.stacksTo(1)));
 
+    public static final net.minecraft.world.inventory.MenuType<com.creativemd.littletiles.fabric.item.HammerMenu> HAMMER_MENU =
+            Registry.register(BuiltInRegistries.MENU,id("hammer"),new net.minecraft.world.inventory.MenuType<>(
+                    com.creativemd.littletiles.fabric.item.HammerMenu::new,net.minecraft.world.flag.FeatureFlags.DEFAULT_FLAGS));
     private LittleTilesContent() {}
     public static ResourceLocation id(String path) { return ResourceLocation.fromNamespaceAndPath("littletiles", path); }
     private static Item register(String name, Function<Item.Properties, Item> factory) {

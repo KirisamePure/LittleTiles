@@ -80,11 +80,12 @@ See [PORTING.md](PORTING.md) for the remaining features and acceptance checks.
 
 ## Implemented gameplay subset
 
-- Hammer: **G** or right-click air opens the cutting workbench. Select an ordinary
-  block stack directly from your inventory, set XYZ (1–16 sixteenths) and batch
+- Hammer: **G** or right-click air opens the cutting workbench. Place an ordinary
+  block stack from the visible player inventory into the input slot (click/drag
+  or Shift-click), set XYZ (1–16 sixteenths) and batch
   quantity (1–64), then Hammer it. The server validates the real input, consumes
-  whole blocks and refunds every unused micro-volume. No items are held in a
-  temporary GUI slot. A front-view grid previews the chosen dimensions.
+  whole blocks and refunds every unused micro-volume. Unused input returns to the player when the menu closes, or drops if the
+  inventory is full. A front-view grid previews the chosen dimensions.
   Use on a supported world cube to convert it; use on microtiles to extract a
   cuboid; sneak-use harvests the entire group.
 - Chisel/saw: configurable voxel, sized box, slice, two-corner region, whole-cuboid
@@ -155,7 +156,7 @@ data, captures world/item screenshots, and checks portable inventory menu data.
 Screenshots alone do not establish visual feature parity; inspect them for
 missing textures, incorrect geometry, tint and transparency.
 
-Latest validation passed 25 custom server tests (26 including the runner),
+Latest validation passed 26 custom server tests (27 including the runner),
 108,463 geometry checks, 256,000 randomized surface checks plus adjacency/UV
 checks, and the real client test. Client checks cover clipping, transparent
 interfaces, model/tint cache invalidation, inventory/menu synchronization and
@@ -179,3 +180,9 @@ reach, protection and permissions; a green ghost is not a guarantee that those
 server checks will succeed. The current overlay shows volume rather than a
 textured material ghost. Additional color settings and functional structures
 remain deferred.
+
+The hammer workbench uses a registered container menu with ordinary synchronized
+inventory slots. The held hammer slot is locked against pickup, shift-click and
+number-key swaps. Craft requests are bound to the active menu ID and input item;
+late requests after closing are rejected. Input only accepts supported ordinary
+blocks; containers, machines and item-specific block data remain excluded.

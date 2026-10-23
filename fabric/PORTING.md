@@ -124,3 +124,15 @@ feature parity or publish this as the completed port.
 - Added three server regressions for batch volume conservation, malformed/stale
   hammer requests and compaction identity/holes. Client checks cover the hammer
   screen and real manufacturing packet, preview alignment and blocked overlap.
+
+## Hammer input-slot correction
+
+Replaced the material-cycling screen with an actual synchronized container menu:
+one input slot, visible player inventory, pickup/drag, right-click splitting and
+Shift transfer. Open requests go through the server for both G and air use.
+Crafting consumes only the active menu input and rejects wrong/closed menu IDs.
+The bound hammer is locked; container removal returns unused input via vanilla
+inventory/drop handling. Server regressions exercise transfers, split stacks,
+invalid inputs, tool swaps, repeated close and stale packets. The client test
+opens the real menu, moves material with vanilla click packets, crafts and
+checks that remaining material returns on close.

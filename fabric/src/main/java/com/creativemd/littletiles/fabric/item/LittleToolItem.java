@@ -32,6 +32,13 @@ public final class LittleToolItem extends Item {
                 + tool.name().toLowerCase(java.util.Locale.ROOT)));
     }
 
+    @Override public InteractionResult use(net.minecraft.world.level.Level level,net.minecraft.world.entity.player.Player player,
+                                          net.minecraft.world.InteractionHand hand) {
+        if(tool!=Tool.HAMMER || hand!=net.minecraft.world.InteractionHand.MAIN_HAND || player.isShiftKeyDown()) return InteractionResult.PASS;
+        if(player instanceof ServerPlayer server) HammerMenu.open(server);
+        return InteractionResult.SUCCESS;
+    }
+
     @Override public InteractionResult useOn(UseOnContext context) {
         if (context.getLevel().isClientSide()) return InteractionResult.SUCCESS;
         if (!(context.getPlayer() instanceof ServerPlayer player)) return InteractionResult.FAIL;

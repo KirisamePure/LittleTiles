@@ -424,9 +424,15 @@ public final class TileGameTests {
     @GameTest public void hammerManufacturingConservesRemainder(GameTestHelper h) {
         var player=player(h,false);player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(LittleTilesContent.HAMMER));
         player.getInventory().setItem(9,new ItemStack(Items.STONE,2));
-        var packet=new com.creativemd.littletiles.fabric.edit.HammerPayload(9,
+        var menu=new com.creativemd.littletiles.fabric.item.HammerMenu(7,player.getInventory());player.containerMenu=menu;
+        menu.quickMoveStack(player,1);
+        check(h,menu.input().getCount()==2 && player.getInventory().getItem(9).isEmpty(),"Shift-click moves actual material into input slot");
+        var packet=new com.creativemd.littletiles.fabric.edit.HammerPayload(menu.containerId,
                 net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(Items.STONE),3,5,7,17);
         check(h,packet.apply(player),"Hammer must manufacture from real inventory blocks");
+        check(h,menu.input().getCount()==1,"Only the required whole block is consumed from input");
+        menu.removed(player);
+        check(h,menu.input().isEmpty(),"Closing returns unused input and clears the slot");
         long volume=0;int produced=0;
         for(int slot=0;slot<player.getInventory().getContainerSize();slot++) {
             var stack=player.getInventory().getItem(slot);
@@ -441,20 +447,43 @@ public final class TileGameTests {
     }
     @GameTest public void hammerRejectsForgedAndStaleRequests(GameTestHelper h) {
         var player=player(h,false);player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(LittleTilesContent.HAMMER));
-        player.getInventory().setItem(9,new ItemStack(Items.STONE));
+        var menu=new com.creativemd.littletiles.fabric.item.HammerMenu(7,player.getInventory());player.containerMenu=menu;
+        menu.getSlot(0).set(new ItemStack(Items.STONE));
         var stone=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(Items.STONE);
         var dirt=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(Items.DIRT);
         for(var request:List.of(
-                new com.creativemd.littletiles.fabric.edit.HammerPayload(9,dirt,1,1,1,1),
-                new com.creativemd.littletiles.fabric.edit.HammerPayload(9,stone,0,1,1,1),
-                new com.creativemd.littletiles.fabric.edit.HammerPayload(9,stone,16,16,16,2),
-                new com.creativemd.littletiles.fabric.edit.HammerPayload(9,stone,1,1,1,65),
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(7,dirt,1,1,1,1),
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(7,stone,0,1,1,1),
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(7,stone,16,16,16,2),
+                new com.creativemd.littletiles.fabric.edit.HammerPayload(7,stone,1,1,1,65),
                 new com.creativemd.littletiles.fabric.edit.HammerPayload(39,stone,1,1,1,1)))
-            check(h,!request.apply(player),"Reject invalid dimensions/count/slot, insufficient stock and stale material");
-        check(h,player.getInventory().getItem(9).getCount()==1,"Rejected requests must not consume input");
-        player.getInventory().setItem(9,new ItemStack(Items.CHEST));
-        check(h,!new com.creativemd.littletiles.fabric.edit.HammerPayload(9,
+            check(h,!request.apply(player),"Reject invalid dimensions/count, wrong menu, insufficient stock and stale material");
+        check(h,menu.input().getCount()==1,"Rejected requests must not consume input");
+        menu.getSlot(0).set(new ItemStack(Items.CHEST));
+        check(h,!new com.creativemd.littletiles.fabric.edit.HammerPayload(7,
                 net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(Items.CHEST),1,1,1,1).apply(player),"Never cut block-entity inventory materials");
+        menu.getSlot(0).set(new ItemStack(Items.STONE));player.containerMenu=player.inventoryMenu;
+        check(h,!new com.creativemd.littletiles.fabric.edit.HammerPayload(7,stone,1,1,1,1).apply(player),"Reject late crafting packet after menu closure");
+        menu.removed(player);h.succeed();
+    }
+    @GameTest public void hammerSlotClicksLockToolAndReturnItems(GameTestHelper h) {
+        var player=player(h,false);var hammer=new ItemStack(LittleTilesContent.HAMMER);
+        player.setItemInHand(InteractionHand.MAIN_HAND,hammer);
+        var menu=new com.creativemd.littletiles.fabric.item.HammerMenu(7,player.getInventory());player.containerMenu=menu;
+        check(h,!menu.getSlot(0).mayPlace(new ItemStack(Items.CHEST)) && !menu.getSlot(0).mayPlace(new ItemStack(Items.DIAMOND)),"Input accepts only cuttable ordinary blocks");
+        player.getInventory().setItem(9,new ItemStack(Items.STONE,5));
+        menu.clicked(1,0,ClickType.PICKUP,player);menu.clicked(0,0,ClickType.PICKUP,player);
+        check(h,menu.input().getCount()==5 && menu.getCarried().isEmpty(),"Ordinary inventory pickup and slot placement must work");
+        menu.clicked(0,1,ClickType.PICKUP,player);
+        check(h,menu.input().getCount()==2 && menu.getCarried().getCount()==3,"Right click splits input stack");
+        menu.clicked(1,0,ClickType.PICKUP,player);
+        menu.clicked(28,0,ClickType.PICKUP,player);
+        check(h,menu.getCarried().isEmpty() && player.getMainHandItem()==hammer,"Bound hammer cannot be picked up: carried="+menu.getCarried()+", held="+player.getMainHandItem()+", identity="+(player.getMainHandItem()==hammer)+", selected="+player.getInventory().getSelectedSlot());
+        menu.clicked(0,0,ClickType.SWAP,player);
+        check(h,menu.input().getCount()==2 && player.getMainHandItem()==hammer,"Number key cannot swap hammer into input");
+        menu.removed(player);menu.removed(player);
+        int count=0;for(int i=0;i<player.getInventory().getContainerSize();i++) if(player.getInventory().getItem(i).is(Items.STONE)) count+=player.getInventory().getItem(i).getCount();
+        check(h,count==5 && menu.input().isEmpty(),"Repeated close cannot lose or duplicate input");
         h.succeed();
     }
     @GameTest public void fastCompactionPreservesHolesAndIdentity(GameTestHelper h) {

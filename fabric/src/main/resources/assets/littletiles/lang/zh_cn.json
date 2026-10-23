@@ -54,5 +54,6 @@
   "hammer.littletiles.cost": "消耗：%s 个方块",
   "hammer.littletiles.hint": "XYZ 单位为 1/16 格；G / 对空气右键打开",
   "hammer.littletiles.failed": "加工失败：请检查材料和数量。",
-  "hammer.littletiles.refund": "返还：%s / 4096"
+  "hammer.littletiles.refund": "返还：%s / 4096",
+  "hammer.littletiles.input": "材料槽"
 }

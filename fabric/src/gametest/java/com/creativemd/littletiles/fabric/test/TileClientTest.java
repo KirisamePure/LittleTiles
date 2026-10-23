@@ -105,8 +105,16 @@ public final class TileClientTest implements FabricClientGameTest {
             });
             context.waitFor(client -> client.player.getMainHandItem().is(LittleTilesContent.HAMMER)
                     && client.player.getInventory().getItem(9).is(Items.STONE));
-            context.runOnClient(client -> client.setScreen(new com.creativemd.littletiles.fabric.client.HammerScreen(client.player.getMainHandItem())));
+            context.runOnClient(client -> ClientPlayNetworking.send(new com.creativemd.littletiles.fabric.edit.OpenHammerPayload()));
             context.waitForScreen(com.creativemd.littletiles.fabric.client.HammerScreen.class);
+            context.runOnClient(client -> {
+                var menu=client.player.containerMenu;
+                client.gameMode.handleInventoryMouseClick(menu.containerId,1,0,net.minecraft.world.inventory.ClickType.PICKUP,client.player);
+                client.gameMode.handleInventoryMouseClick(menu.containerId,0,0,net.minecraft.world.inventory.ClickType.PICKUP,client.player);
+            });
+            context.waitFor(client -> client.player.containerMenu.getSlot(0).getItem().is(Items.STONE)
+                    && client.player.containerMenu.getSlot(0).getItem().getCount()==2
+                    && client.player.getInventory().getItem(9).isEmpty());
             context.takeScreenshot("littletiles-hammer");
             context.clickScreenButton("hammer.littletiles.craft");
             context.waitFor(client -> {
@@ -114,7 +122,13 @@ public final class TileClientTest implements FabricClientGameTest {
                         && Tiles.read(client.player.getInventory().getItem(i)).map(t -> t.size()==1 && t.getFirst().box().volume()==1).orElse(false)) return true;
                 return false;
             });
+            context.waitFor(client -> client.player.containerMenu.getSlot(0).getItem().getCount()==1);
             context.clickScreenButton("gui.done");
+            context.waitFor(client -> {
+                if(client.player.containerMenu!=client.player.inventoryMenu) return false;
+                int count=0;for(int i=0;i<36;i++) if(client.player.getInventory().getItem(i).is(Items.STONE)) count+=client.player.getInventory().getItem(i).getCount();
+                return count==1;
+            });
             // Hit location is fed to both client preview and the real server placement routine.
             final var stamp=List.of(new Tile(Blocks.STONE.defaultBlockState(),new MicroBox(0,0,0,4,4,4),0xFFFFFF,true));
             world.getServer().runOnServer(server -> {

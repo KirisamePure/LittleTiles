@@ -20,8 +20,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
 
-/** Inventory-slot reference only: the server chooses material and computes every debit. */
-public record HammerPayload(int slot, ResourceLocation expectedItem, int width, int height, int depth, int count)
+/** Bound to the active server menu: clients cannot manufacture from arbitrary inventory slots. */
+public record HammerPayload(int menuId, ResourceLocation expectedItem, int width, int height, int depth, int count)
         implements CustomPacketPayload {
     public static final Type<HammerPayload> TYPE = new Type<>(LittleTilesContent.id("hammer"));
     public static final StreamCodec<RegistryFriendlyByteBuf,HammerPayload> CODEC = new StreamCodec<>() {
@@ -29,7 +29,7 @@ public record HammerPayload(int slot, ResourceLocation expectedItem, int width, 
             return new HammerPayload(b.readVarInt(), b.readResourceLocation(), b.readVarInt(), b.readVarInt(), b.readVarInt(), b.readVarInt());
         }
         public void encode(RegistryFriendlyByteBuf b,HammerPayload p) {
-            b.writeVarInt(p.slot);b.writeResourceLocation(p.expectedItem);b.writeVarInt(p.width);b.writeVarInt(p.height);b.writeVarInt(p.depth);b.writeVarInt(p.count);
+            b.writeVarInt(p.menuId);b.writeResourceLocation(p.expectedItem);b.writeVarInt(p.width);b.writeVarInt(p.height);b.writeVarInt(p.depth);b.writeVarInt(p.count);
         }
     };
     @Override public Type<HammerPayload> type() { return TYPE; }
@@ -40,9 +40,10 @@ public record HammerPayload(int slot, ResourceLocation expectedItem, int width, 
     }
     public boolean apply(ServerPlayer player) {
         if (!player.getMainHandItem().is(LittleTilesContent.HAMMER) || player.isSpectator()
-                || slot<0 || (slot>=36 && slot!=40) || width<1 || width>16 || height<1 || height>16
+                || !(player.containerMenu instanceof com.creativemd.littletiles.fabric.item.HammerMenu menu)
+                || menu.containerId!=menuId || !menu.stillValid(player) || width<1 || width>16 || height<1 || height>16
                 || depth<1 || depth>16 || count<1 || count>64) return false;
-        ItemStack input=player.getInventory().getItem(slot);
+        ItemStack input=menu.input();
         if (!plainBlock(input) || !BuiltInRegistries.ITEM.getKey(input.getItem()).equals(expectedItem)) return false;
         var state=((BlockItem)input.getItem()).getBlock().defaultBlockState();
         if (!MaterialRules.canCut(state,player.level(),player.blockPosition())) return false;
@@ -57,10 +58,11 @@ public record HammerPayload(int slot, ResourceLocation expectedItem, int width, 
         if (!player.getInventory().add(output)) player.drop(output,false);
         if (!player.getAbilities().instabuild) for (ItemStack refund:MaterialPayment.refund(state.getBlock(),cost*4096-volume))
             if (!player.getInventory().add(refund)) player.drop(refund,false);
-        player.getInventory().setChanged();player.inventoryMenu.broadcastChanges();
+        player.getInventory().setChanged();menu.inputChanged();player.inventoryMenu.broadcastChanges();
         return true;
     }
     public static void initialize() {
+        OpenHammerPayload.initialize();
         PayloadTypeRegistry.playC2S().register(TYPE,CODEC);
         ServerPlayNetworking.registerGlobalReceiver(TYPE,(p,c) -> c.server().execute(() -> {
             if (!p.apply(c.player())) c.player().displayClientMessage(net.minecraft.network.chat.Component.translatable("hammer.littletiles.failed"),true);

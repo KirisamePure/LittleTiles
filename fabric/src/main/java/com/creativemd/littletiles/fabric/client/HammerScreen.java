@@ -6,6 +6,7 @@ import java.util.stream.IntStream;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.CycleButton;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import com.creativemd.littletiles.fabric.item.HammerMenu;
@@ -39,9 +40,16 @@ public final class HammerScreen extends AbstractContainerScreen<HammerMenu> {
         refresh();
     }
     private void dimension(int x,int y,String label,int initial,java.util.function.IntConsumer update) {
-        addRenderableWidget(CycleButton.<Integer>builder(v -> Component.literal(v+" / 16"))
-                .withValues(IntStream.rangeClosed(1,16).boxed().toList()).withInitialValue(initial)
-                .create(x,y,76,20,Component.literal(label),(b,v) -> {update.accept(v);refresh();}));
+        addRenderableWidget(new AbstractSliderButton(x,y,76,20,
+                Component.literal(label+": "+initial+" / 16"),(initial-1)/15.0) {
+            private int size() { return 1+(int)Math.round(value*15); }
+            @Override protected void updateMessage() {
+                setMessage(Component.literal(label+": "+size()+" / 16"));
+            }
+            @Override protected void applyValue() {
+                update.accept(size());refresh();
+            }
+        });
     }
     private void refresh() {
         if(minecraft==null || minecraft.player==null || craft==null) return;

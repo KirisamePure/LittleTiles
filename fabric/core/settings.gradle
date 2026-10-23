@@ -1,0 +1,2 @@
+// Also usable as a standalone offline build without resolving Loom.
+rootProject.name = 'littletiles-core'

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "littletiles",
+  "version": "${version}",
+  "name": "LittleTiles (Fabric port development)",
+  "description": "Work in progress port. Gameplay feature migration is not complete.",
+  "environment": "*",
+  "accessWidener": "littletiles.accesswidener",
+  "entrypoints": {
+    "main": ["com.creativemd.littletiles.fabric.LittleTilesFabric"],
+    "client": ["com.creativemd.littletiles.fabric.client.LittleTilesClient"]
+  },
+  "license": "GPL-3.0-only",
+  "depends": {
+    "fabricloader": ">=0.19.5",
+    "minecraft": "1.21.10",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

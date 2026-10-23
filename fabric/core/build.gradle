@@ -1,0 +1,30 @@
+plugins { id 'java-library' }
+
+group = 'com.creativemd.littletiles'
+version = '0.1.0-port-dev'
+
+java { toolchain.languageVersion = JavaLanguageVersion.of(25) }
+tasks.withType(JavaCompile).configureEach { options.release = 21 }
+
+sourceSets {
+    geometryTest {
+        compileClasspath += sourceSets.main.output
+        runtimeClasspath += sourceSets.main.output
+    }
+}
+
+// A dependency-free behavioral suite, also runnable directly with javac/java.
+def geometryTest = tasks.register('geometryTest', JavaExec) {
+    dependsOn geometryTestClasses
+    classpath = sourceSets.geometryTest.runtimeClasspath
+    mainClass = 'com.creativemd.littletiles.core.MicroBoxTest'
+}
+tasks.named('check') { dependsOn geometryTest }
+def faceVisibilityTest = tasks.register('faceVisibilityTest', JavaExec) {
+    dependsOn geometryTestClasses
+    classpath = sourceSets.geometryTest.runtimeClasspath
+    mainClass = 'com.creativemd.littletiles.core.FaceVisibilityTest'
+}
+tasks.named('check') { dependsOn faceVisibilityTest }
+
+jar { from('../../LICENSE') { rename { 'LICENSE_LittleTiles' } } }

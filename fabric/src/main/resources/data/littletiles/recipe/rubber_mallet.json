@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "WWW",
+    "WLW",
+    " L "
+  ],
+  "key": {
+    "W": "minecraft:white_wool",
+    "L": "minecraft:lapis_lazuli"
+  },
+  "result": {
+    "id": "littletiles:rubber_mallet",
+    "count": 1
+  }
+}

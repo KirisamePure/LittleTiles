@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "III",
+    "IHI",
+    "III"
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "H": "littletiles:hammer"
+  },
+  "result": {
+    "id": "littletiles:container",
+    "count": 1
+  }
+}

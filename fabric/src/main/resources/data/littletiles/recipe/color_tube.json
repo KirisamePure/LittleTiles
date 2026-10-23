@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "DDD",
+    "DID",
+    "DDD"
+  ],
+  "key": {
+    "D": "#c:dyes",
+    "I": "minecraft:iron_ingot"
+  },
+  "result": {
+    "id": "littletiles:color_tube",
+    "count": 1
+  }
+}

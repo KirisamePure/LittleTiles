@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "id": "littletiles-test",
+  "version": "1.0.0",
+  "name": "LittleTiles server integration tests",
+  "environment": "*",
+  "entrypoints": {
+    "main": ["com.creativemd.littletiles.fabric.test.CompatibilityFixture"],
+    "client": ["com.creativemd.littletiles.fabric.test.CompatibilityFixtureClient"],
+    "fabric-gametest": ["com.creativemd.littletiles.fabric.test.TileGameTests"],
+    "fabric-client-gametest": ["com.creativemd.littletiles.fabric.test.TileClientTest"]
+  },
+  "depends": { "littletiles": "*", "fabric-gametest-api-v1": "*" }
+}

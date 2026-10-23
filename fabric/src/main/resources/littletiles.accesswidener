@@ -1,0 +1,3 @@
+accessWidener v2 named
+# Register the custom data-driven item renderer in vanilla's codec dispatch.
+accessible field net/minecraft/client/renderer/special/SpecialModelRenderers ID_MAPPER Lnet/minecraft/util/ExtraCodecs$LateBoundIdMapper;

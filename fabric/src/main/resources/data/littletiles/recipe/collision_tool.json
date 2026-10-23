@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " I ",
+    "ILI",
+    " I "
+  ],
+  "key": {
+    "I": "minecraft:iron_ingot",
+    "L": "minecraft:redstone"
+  },
+  "result": {
+    "id": "littletiles:collision_tool",
+    "count": 1
+  }
+}

@@ -1,0 +1,45 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+base { archivesName = 'littletiles-fabric' }
+
+loom { accessWidenerPath = file('src/main/resources/littletiles.accesswidener') }
+
+dependencies {
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings loom.officialMojangMappings()
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    implementation project(':core')
+    include project(':core')
+}
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    withSourcesJar()
+}
+tasks.withType(JavaCompile).configureEach { options.release = 21 }
+
+processResources {
+    def expandedVersion = project.version.toString()
+    inputs.property 'version', expandedVersion
+    filesMatching('fabric.mod.json') { expand version: expandedVersion }
+}
+
+jar {
+    from('../LICENSE') { rename { 'LICENSE_LittleTiles' } }
+}
+
+tasks.named('check') { dependsOn ':core:check' }
+
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = 'littletiles-test'
+        enableGameTests = true
+        enableClientGameTests = true
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "LLL",
+    "L L",
+    "LLL"
+  ],
+  "key": {
+    "L": "minecraft:leather"
+  },
+  "result": {
+    "id": "littletiles:little_bag",
+    "count": 1
+  }
+}
